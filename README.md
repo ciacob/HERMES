@@ -1,6 +1,6 @@
-# HERMES
+# HERME5
 
-**HERMES** (*Handling & Evaluating Repository Maintenance, Enhancements & Synchronization*) is a simple tool for managing multiple Git repositories in a workspace.
+**HERME5** (*Handling & Evaluating Repository Maintenance, Enhancements & Synchronization*) is a simple tool for managing multiple Git repositories in a workspace.
 
 ⚠️ **This project is in its early stages. Expect frequent updates and improvements.**  
 
@@ -12,12 +12,12 @@
 ## Installation
 Once published on npm, you’ll be able to install it globally:
 ```sh
-npm install -g hermes
+npm install -g herme5
 ```
 
 ## Usage
 ```
-hermes <workspace-path> [--pull] [--stash]
+herme5 <workspace-path> [--pull] [--stash]
 ```
 
 Where:
@@ -27,7 +27,7 @@ Where:
 
 ### Example:
 ```
-hermes ~/projects --pull --stash
+herme5 ~/projects --pull --stash
 ```
 
 This will:

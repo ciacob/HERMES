@@ -1,9 +1,9 @@
 {
-  "name": "hermes",
+  "name": "herme5",
   "version": "1.0.0",
-  "description": "HERMES is a simple tool for managing multiple Git repositories in a workspace.",
+  "description": "HERME5 is a simple tool for managing multiple Git repositories in a workspace.",
   "keywords": [
-    "hermes",
+    "herme5",
     "git",
     "github",
     "remote",
@@ -24,7 +24,7 @@
   "type": "commonjs",
   "main": "index.js",
   "bin": {
-    "hermes": "index.js"
+    "herme5": "index.js"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
