@@ -28,7 +28,7 @@ Where:
 hermes ~/projects --pull
 ```
 
-This will check all repositories inside ~/projects and pull updates where needed.
+This will check all repositories inside `~/projects` and pull updates where needed.
 
 ## Roadmap
 - Improve error handling

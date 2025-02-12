@@ -1,0 +1,32 @@
+{
+  "name": "hermes",
+  "version": "1.0.0",
+  "description": "HERMES is a simple tool for managing multiple Git repositories in a workspace.",
+  "keywords": [
+    "hermes",
+    "git",
+    "github",
+    "remote",
+    "management",
+    "workspace",
+    "autopull"
+  ],
+  "homepage": "https://github.com/ciacob/HERMES#readme",
+  "bugs": {
+    "url": "https://github.com/ciacob/HERMES/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ciacob/HERMES.git"
+  },
+  "license": "MIT",
+  "author": "Claudius Iacob <claudius.iacob@gmail.com>",
+  "type": "commonjs",
+  "main": "index.js",
+  "bin": {
+    "hermes": "index.js"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  }
+}
