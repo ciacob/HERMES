@@ -4,65 +4,107 @@ const fs = require("fs");
 const path = require("path");
 const { execSync } = require("child_process");
 
-if (process.argv.length < 3 || process.argv.length > 4) {
-  console.error("Usage: check-remote-updates <workspace-path> [--pull]");
-  process.exit(1);
+function parseArguments() {
+  if (process.argv.length < 3 || process.argv.length > 5) {
+    console.error("Usage: hermes <workspace-path> [--pull] [--stash]");
+    process.exit(1);
+  }
+
+  const workspacePath = path.resolve(process.argv[2]);
+  const options = {
+    pull: process.argv.includes("--pull"),
+    stash: process.argv.includes("--stash"),
+  };
+
+  return { workspacePath, options };
 }
 
-const WORKSPACE_DIR = path.resolve(process.argv[2]);
-const SHOULD_PULL = process.argv[3] === "--pull";
-
-if (
-  !fs.existsSync(WORKSPACE_DIR) ||
-  !fs.lstatSync(WORKSPACE_DIR).isDirectory()
-) {
-  console.error("❌ Invalid workspace path:", WORKSPACE_DIR);
-  process.exit(1);
+function validateWorkspace(workspacePath) {
+  if (
+    !fs.existsSync(workspacePath) ||
+    !fs.lstatSync(workspacePath).isDirectory()
+  ) {
+    console.error("❌ Invalid workspace path:", workspacePath);
+    process.exit(1);
+  }
 }
 
-console.log(`🔍 Scanning Git repositories in: ${WORKSPACE_DIR}\n`);
-
-const repos = fs.readdirSync(WORKSPACE_DIR).filter((dir) => {
-  const gitPath = path.join(WORKSPACE_DIR, dir, ".git");
-  return fs.existsSync(gitPath) && fs.lstatSync(gitPath).isDirectory();
-});
-
-if (repos.length === 0) {
-  console.log("🚫 No Git repositories found.");
-  process.exit(0);
+function findGitRepositories(workspacePath) {
+  return fs.readdirSync(workspacePath).filter((dir) => {
+    const gitPath = path.join(workspacePath, dir, ".git");
+    return fs.existsSync(gitPath) && fs.lstatSync(gitPath).isDirectory();
+  });
 }
 
-let updatesFound = false;
-
-repos.forEach((repo) => {
-  const repoPath = path.join(WORKSPACE_DIR, repo);
+function checkRepositoryStatus(repoPath) {
   try {
     execSync(`git -C "${repoPath}" fetch`, { stdio: "ignore" });
     const status = execSync(`git -C "${repoPath}" status -sb`).toString();
+    return status.includes("behind");
+  } catch (error) {
+    console.error(`⚠️ Error checking ${repoPath}:`, error.message);
+    return false;
+  }
+}
 
-    if (status.includes("behind")) {
+function pullUpdates(repoPath, useStash) {
+    try {
+        // Check `git status --porcelain` to detect untracked files or conflicts
+        const statusOutput = execSync(`git -C "${repoPath}" status --porcelain`).toString();
+
+        const hasUntrackedFiles = statusOutput.split("\n").some(line => line.startsWith("??"));
+        const hasConflicts = statusOutput.includes("U ") || statusOutput.includes("AA");
+
+        if (useStash && !hasUntrackedFiles && !hasConflicts) {
+            console.log(`💾 Stashing changes in ${repoPath}...`);
+            execSync(`git -C "${repoPath}" stash`, { stdio: 'ignore' });
+        } else if (useStash) {
+            console.log(`⚠️ Skipping stash for ${repoPath}: Untracked files or conflicts detected.`);
+        }
+
+        console.log(`🔄 Pulling updates for ${repoPath}...`);
+        execSync(`git -C "${repoPath}" pull --rebase`, { stdio: 'inherit' });
+
+        if (useStash && !hasUntrackedFiles && !hasConflicts) {
+            console.log(`📂 Restoring stashed changes in ${repoPath}...`);
+            execSync(`git -C "${repoPath}" stash pop`, { stdio: 'inherit' });
+        }
+
+        console.log(`✅ Successfully pulled updates for ${repoPath}.\n`);
+    } catch (error) {
+        console.error(`❌ Failed to pull updates for ${repoPath}:`, error.message);
+    }
+}
+
+function processRepositories(repos, workspacePath, options) {
+  if (repos.length === 0) {
+    console.log("🚫 No Git repositories found.");
+    process.exit(0);
+  }
+
+  let updatesFound = false;
+
+  repos.forEach((repo) => {
+    const repoPath = path.join(workspacePath, repo); // ✅ workspacePath now correctly passed
+    if (checkRepositoryStatus(repoPath)) {
       console.log(`📌 ${repo} is BEHIND the remote branch! Needs pull.`);
-
       updatesFound = true;
 
-      if (SHOULD_PULL) {
-        try {
-          console.log(`🔄 Pulling updates for ${repo}...`);
-          execSync(`git -C "${repoPath}" pull --rebase`, { stdio: "inherit" });
-          console.log(`✅ Successfully pulled updates for ${repo}.\n`);
-        } catch (pullError) {
-          console.error(
-            `❌ Failed to pull updates for ${repo}:`,
-            pullError.message
-          );
-        }
+      if (options.pull) {
+        pullUpdates(repoPath, options.stash);
       }
+    } else {
+        console.log(`✅ ${repo} is up to date.`);
     }
-  } catch (error) {
-    console.error(`⚠️ Error checking ${repo}:`, error.message);
-  }
-});
+  });
 
-if (!updatesFound) {
-  console.log("✅ All repositories are up to date.");
+  if (!updatesFound) {
+    console.log("✅ All repositories are up to date.");
+  }
 }
+
+// --- MAIN EXECUTION ---
+const { workspacePath, options } = parseArguments();
+validateWorkspace(workspacePath);
+const repos = findGitRepositories(workspacePath);
+processRepositories(repos, workspacePath, options);
