@@ -13,3 +13,27 @@ Once published on npm, you’ll be able to install it globally:
 ```sh
 npm install -g hermes
 ```
+
+## Usage
+```
+hermes <workspace-path> [--pull]
+```
+
+Where:
+`<workspace-path>`: The folder containing multiple Git repositories.
+`--pull`: (Optional) If provided, repositories that need updates will be pulled.
+
+### Example:
+```
+hermes ~/projects --pull
+```
+
+This will check all repositories inside ~/projects and pull updates where needed.
+
+## Roadmap
+- Improve error handling
+- Add more workspace-wide Git operations
+- Interactive mode for easier control
+
+## License
+MIT
